@@ -1,4 +1,6 @@
+#include <CLI/CLI.hpp>
 #include <cctype>
+#include <cstdio>
 #include <cstdlib>
 #include <fstream>
 #include <iostream>
@@ -50,7 +52,7 @@ vector<Token> tokenize(const string &str) {
       buf.clear();
       buf.push_back(c);
       int j = i + 1;
-      while (isdigit(str.at(j))) {
+      while (j < str.length() && isdigit(str.at(j))) {
         buf.push_back(str.at(j));
         ++j;
       }
@@ -95,25 +97,50 @@ string tokens_to_c(const vector<Token> &tokens) {
 }
 
 int main(int argc, char *argv[]) {
-  if (argc != 3) {
-    cerr << "Incorrect usag. Correct usage is...\n";
-    cerr << "vyn <input.vyn> <output.c>\n";
-    return EXIT_FAILURE;
-  }
+  CLI::App app{"Vyn compiler"};
+
+  std::string input_file;
+  std::string out_file = "a.out";
+
+  bool c_file = false;
+
+  app.add_option("input_file", input_file, "Input file")->required();
+  app.add_option("-o,--out", out_file, "Output file");
+  app.add_flag("-c,--cfile", c_file, "Creates a c file instead of a binary");
+
+  CLI11_PARSE(app, argc, argv);
 
   string contents;
   {
     stringstream contents_stream;
-    fstream input(argv[1], ios::in);
+
+    fstream input(input_file, ios::in);
+    if (!input) {
+      cerr << "Failed to open input file\n";
+      return EXIT_FAILURE;
+    }
+
     contents_stream << input.rdbuf();
     contents = contents_stream.str();
   }
 
   vector<Token> tokens = tokenize(contents);
+  string c_content = tokens_to_c(tokens);
 
-  {
-    fstream file(argv[2], ios::out);
-    file << tokens_to_c(tokens);
+  if (c_file) {
+    fstream file(out_file, ios::out);
+    if (!file) {
+      cerr << "Failed to open output file\n";
+      return EXIT_FAILURE;
+    }
+
+    file << c_content;
+
+  } else {
+    string cmd_string = "clang -x c - -o " + out_file;
+    FILE *pipe = popen(cmd_string.c_str(), "w");
+    fputs(c_content.c_str(), pipe);
+    pclose(pipe);
   }
 
   return EXIT_SUCCESS;
