@@ -1,75 +1,14 @@
 #include <CLI/CLI.hpp>
-#include <cctype>
 #include <cstdio>
 #include <cstdlib>
 #include <fstream>
 #include <iostream>
-#include <optional>
 #include <sstream>
-#include <vector>
+
+#include "./tokenization.hpp"
 
 using namespace std;
 
-enum class TokenType { _return, _int_lit, _int, _str, _newline };
-
-struct Token {
-  TokenType type;
-  optional<string> value;
-};
-
-vector<Token> tokenize(const string &str) {
-  vector<Token> tokens;
-  string buf;
-
-  for (int i = 0; i < str.length(); ++i) {
-    char c = str.at(i);
-
-    if (isalpha(c)) {
-      buf.clear();
-      buf.push_back(c);
-
-      int j = i + 1;
-      while (j < str.length() && isalnum(str.at(j))) {
-        buf.push_back(str.at(j));
-        ++j;
-      }
-
-      i = j - 1;
-
-      if (buf == "return") {
-        tokens.push_back({.type = TokenType::_return});
-      } else if (buf == "int") {
-        tokens.push_back({.type = TokenType::_int});
-      } else if (buf == "str") {
-        tokens.push_back({.type = TokenType::_str});
-      } else {
-        cerr << "You messed up";
-        exit(EXIT_FAILURE);
-      }
-    }
-
-    else if (isdigit(c)) {
-      buf.clear();
-      buf.push_back(c);
-      int j = i + 1;
-      while (j < str.length() && isdigit(str.at(j))) {
-        buf.push_back(str.at(j));
-        ++j;
-      }
-      i = j - 1;
-      tokens.push_back({.type = TokenType::_int_lit, .value = buf});
-    } else if (c == '\n') {
-      tokens.push_back({.type = TokenType::_newline});
-    } else if (isspace(c)) {
-      continue;
-    } else {
-      cerr << "You messed up";
-      exit(EXIT_FAILURE);
-    }
-  }
-
-  return tokens;
-}
 string tokens_to_c(const vector<Token> &tokens) {
   stringstream output;
 
@@ -124,7 +63,9 @@ int main(int argc, char *argv[]) {
     contents = contents_stream.str();
   }
 
-  vector<Token> tokens = tokenize(contents);
+  Tokenizer tokenizer(std::move(contents));
+
+  vector<Token> tokens = tokenizer.tokenize();
   string c_content = tokens_to_c(tokens);
 
   if (c_file) {
