@@ -7,11 +7,14 @@
 #include <string>
 #include <vector>
 
-enum class TokenType { _return, _int_lit, _int, _str, _newline };
+enum class TokenType { _return, _int_lit, _int, _str, _newline, _exit, _eof };
 
 struct Token {
   TokenType type;
   std::optional<std::string> value;
+
+  Token(TokenType t, std::optional<std::string> v = std::nullopt)
+      : type(t), value(std::move(v)) {}
 };
 
 class Tokenizer {
@@ -34,7 +37,9 @@ public:
         }
 
         if (buf == "return") {
-          tokens.push_back({.type = TokenType::_return});
+          tokens.push_back(Token{TokenType::_return});
+        } else if (buf == "exit") {
+          tokens.push_back(Token{TokenType::_exit});
         } else {
           std::cerr << "Invalid identifier: " << buf << "\n";
           exit(EXIT_FAILURE);
@@ -50,12 +55,12 @@ public:
           buf.push_back(consume());
           n = peek();
         }
-        tokens.push_back({.type = TokenType::_int_lit, .value = buf});
+        tokens.push_back(Token{TokenType::_int_lit, buf});
       }
 
       else if (*c == '\n') {
         consume();
-        tokens.push_back({.type = TokenType::_newline});
+        tokens.push_back(Token{TokenType::_newline});
       }
 
       else if (std::isspace(static_cast<unsigned char>(*c))) {
@@ -67,20 +72,21 @@ public:
         exit(EXIT_FAILURE);
       }
     }
+    tokens.push_back(Token{TokenType::_eof});
     m_idx = 0;
     return tokens;
   }
 
 private:
-  [[nodiscard]] std::optional<char> peek(int ahead = 0) const {
+  [[nodiscard]] inline std::optional<char> peek(size_t ahead = 0) const {
     if (m_idx + ahead >= m_src.length()) {
       return {};
     }
     return m_src.at(m_idx + ahead);
   }
 
-  char consume() { return m_src.at(m_idx++); }
+  inline char consume() { return m_src.at(m_idx++); }
 
   const std::string m_src;
-  int m_idx = 0;
+  size_t m_idx = 0;
 };

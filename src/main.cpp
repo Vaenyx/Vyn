@@ -1,87 +1,51 @@
+#include "helpers.hpp"
+#include "vyn_compilation.hpp"
 #include <CLI/CLI.hpp>
-#include <cstdio>
 #include <cstdlib>
-#include <fstream>
 #include <iostream>
-#include <sstream>
 
-#include "./tokenization.hpp"
+struct Args {
+  std::string input_file;
+  std::string out_file;
+  bool c_file;
+};
 
-using namespace std;
+Args get_args(int argc, char *argv[]) {
+  CLI::App app{"Vyn compiler"};
 
-string tokens_to_c(const vector<Token> &tokens) {
-  stringstream output;
+  Args args;
+  args.out_file = "a.out";
+  args.c_file = false;
 
-  output << "#include <stdio.h>\n\nint main() {\n";
+  app.add_option("input_file", args.input_file, "Input file")->required();
+  app.add_option("-o,--out", args.out_file, "Output file");
+  app.add_flag("-c,--cfile", args.c_file,
+               "Creates a c file instead of a binary");
 
-  for (int i = 0; i < tokens.size(); ++i) {
-    const Token &token = tokens.at(i);
-
-    if (token.type == TokenType::_return) {
-      if (i + 1 < tokens.size() &&
-          tokens.at(i + 1).type == TokenType::_int_lit) {
-
-        if (i + 2 < tokens.size() &&
-            tokens.at(i + 2).type == TokenType::_newline) {
-
-          output << "return ";
-          output << tokens.at(i + 1).value.value() << ";";
-        }
-      }
-    }
+  try {
+    app.parse(argc, argv);
+  } catch (const CLI::ParseError &err) {
+    std::exit(app.exit(err));
   }
 
-  output << "\n}";
-  return output.str();
+  return args;
 }
 
 int main(int argc, char *argv[]) {
-  CLI::App app{"Vyn compiler"};
+  Args args = get_args(argc, argv);
 
-  std::string input_file;
-  std::string out_file = "a.out";
-
-  bool c_file = false;
-
-  app.add_option("input_file", input_file, "Input file")->required();
-  app.add_option("-o,--out", out_file, "Output file");
-  app.add_flag("-c,--cfile", c_file, "Creates a c file instead of a binary");
-
-  CLI11_PARSE(app, argc, argv);
-
-  string contents;
-  {
-    stringstream contents_stream;
-
-    fstream input(input_file, ios::in);
-    if (!input) {
-      cerr << "Failed to open input file\n";
-      return EXIT_FAILURE;
-    }
-
-    contents_stream << input.rdbuf();
-    contents = contents_stream.str();
+  std::string contents = get_file_content(args.input_file);
+  if (contents.empty()) {
+    std::cerr << "Input file is empty or failed to read\n";
+    return EXIT_FAILURE;
   }
 
-  Tokenizer tokenizer(std::move(contents));
+  std::string c_code = vyn_to_c(contents);
 
-  vector<Token> tokens = tokenizer.tokenize();
-  string c_content = tokens_to_c(tokens);
-
-  if (c_file) {
-    fstream file(out_file, ios::out);
-    if (!file) {
-      cerr << "Failed to open output file\n";
-      return EXIT_FAILURE;
-    }
-
-    file << c_content;
-
+  if (args.c_file) {
+    write_to_file(args.out_file, c_code);
   } else {
-    string cmd_string = "clang -x c - -o " + out_file;
-    FILE *pipe = popen(cmd_string.c_str(), "w");
-    fputs(c_content.c_str(), pipe);
-    pclose(pipe);
+    compile_c(c_code, args.out_file);
   }
 
   return EXIT_SUCCESS;
