@@ -19,5 +19,19 @@ endif()
 
 add_executable(vyn src/main.cpp)
 
+if (MSVC)
+    target_compile_options(vyn PRIVATE /W4 /WX)
+else()
+    target_compile_options(vyn PRIVATE
+        -Wall
+        -Wextra
+        -Wpedantic
+        -Wconversion
+        -Wshadow
+        -Werror
+    )
+endif()
+
+
 target_link_libraries(vyn PRIVATE CLI11::CLI11)
 target_compile_features(vyn PRIVATE cxx_std_23)
