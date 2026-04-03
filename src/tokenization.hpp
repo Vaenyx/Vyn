@@ -28,8 +28,11 @@ struct Token {
   TokenType type;
   std::optional<std::string> value;
 
-  Token(TokenType t, std::optional<std::string> v = std::nullopt)
-      : type(t), value(std::move(v)) {}
+  size_t m_line;
+  size_t m_col;
+
+  Token(TokenType t, std::optional<std::string> v, size_t line, size_t col)
+      : type(t), value(std::move(v)), m_line(line), m_col(col) {}
 };
 
 class Tokenizer {
@@ -41,6 +44,9 @@ public:
     std::string buf;
 
     while (auto c = peek()) {
+      size_t start_line = m_line;
+      size_t start_col = m_col;
+
       if (std::isalpha(static_cast<unsigned char>(*c))) {
         buf.clear();
         buf.push_back(consume());
@@ -51,19 +57,7 @@ public:
           n = peek();
         }
 
-        if (buf == "return") {
-          tokens.push_back(Token{TokenType::_return});
-        } else if (buf == "exit") {
-          tokens.push_back(Token{TokenType::_exit});
-        } else if (buf == "const") {
-          tokens.push_back(Token{TokenType::_const});
-        } else if (buf == "mut") {
-          tokens.push_back(Token{TokenType::_mut});
-        } else if (buf == "int") {
-          tokens.push_back(Token{TokenType::_int});
-        } else {
-          tokens.push_back(Token{TokenType::_ident, buf});
-        }
+        tokens.push_back(buf_to_token(buf, start_line, start_col));
         continue;
       }
 
@@ -76,49 +70,18 @@ public:
           buf.push_back(consume());
           n = peek();
         }
-        tokens.push_back(Token{TokenType::_int_lit, buf});
+        tokens.push_back(
+            Token{TokenType::_int_lit, buf, start_line, start_col});
         continue;
       }
 
-      if (c == '=') {
-        consume();
-        tokens.push_back(Token{TokenType::_assign});
-        continue;
+      std::optional<Token> char_tok = char_to_token(*c);
+      if (char_tok) {
+        tokens.push_back(*char_tok);
       }
-
-      if (c == ':') {
-        consume();
-        tokens.push_back(Token{TokenType::_colon});
-        continue;
-      }
-
-      if (c == '(') {
-        consume();
-        tokens.push_back(Token{TokenType::_open_paren});
-        continue;
-      }
-
-      if (c == ')') {
-        consume();
-        tokens.push_back(Token{TokenType::_close_paren});
-        continue;
-      }
-
-      if (c == '\n') {
-        consume();
-        tokens.push_back(Token{TokenType::_newline});
-        continue;
-      }
-
-      if (std::isspace(static_cast<unsigned char>(*c))) {
-        consume();
-        continue;
-      }
-
-      std::cerr << "Unexpected character: " << *c << "\n";
-      exit(EXIT_FAILURE);
     }
-    tokens.push_back(Token{TokenType::_eof});
+
+    tokens.push_back(Token{TokenType::_eof, std::nullopt, m_line, m_col});
     m_idx = 0;
     return tokens;
   }
@@ -130,8 +93,76 @@ private:
     }
     return m_src[m_idx + ahead];
   }
-  inline char consume() { return m_src.at(m_idx++); }
+
+  Token buf_to_token(const std::string &buf, size_t line, size_t col) {
+    if (buf == "return") {
+      return Token{TokenType::_return, std::nullopt, line, col};
+    } else if (buf == "exit") {
+      return Token{TokenType::_exit, std::nullopt, line, col};
+    } else if (buf == "const") {
+      return Token{TokenType::_const, std::nullopt, line, col};
+    } else if (buf == "mut") {
+      return Token{TokenType::_mut, std::nullopt, line, col};
+    } else if (buf == "int") {
+      return Token{TokenType::_int, std::nullopt, line, col};
+    } else {
+      return Token{TokenType::_ident, buf, line, col};
+    }
+  }
+
+  std::optional<Token> char_to_token(char c) {
+    size_t line = m_line;
+    size_t col = m_col;
+
+    if (c == '=') {
+      consume();
+      return Token{TokenType::_assign, std::nullopt, line, col};
+    }
+
+    if (c == ':') {
+      consume();
+      return Token{TokenType::_colon, std::nullopt, line, col};
+    }
+
+    if (c == '(') {
+      consume();
+      return Token{TokenType::_open_paren, std::nullopt, line, col};
+    }
+
+    if (c == ')') {
+      consume();
+      return Token{TokenType::_close_paren, std::nullopt, line, col};
+    }
+
+    if (c == '\n') {
+      consume();
+      return Token{TokenType::_newline, std::nullopt, line, col};
+    }
+
+    if (std::isspace(static_cast<unsigned char>(c))) {
+      consume();
+      return std::nullopt;
+    }
+
+    std::cerr << "Unexpected character at line " << line << ", col " << col
+              << ": " << c << "\n";
+    exit(EXIT_FAILURE);
+  }
+  inline char consume() {
+    char c = m_src[m_idx++];
+
+    if (c == '\n') {
+      m_line++;
+      m_col = 1;
+    } else {
+      m_col++;
+    }
+
+    return c;
+  }
 
   const std::string m_src;
   size_t m_idx = 0;
+  size_t m_line = 1;
+  size_t m_col = 1;
 };

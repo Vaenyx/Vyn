@@ -76,19 +76,24 @@ public:
       consume();
 
       if (peek().type != TokenType::_open_paren) {
-        std::cerr << "Expected '('\n";
+        std::cerr << "Expected '(' at line " << peek().m_line << ", col "
+                  << peek().m_col << "\n";
         exit(EXIT_FAILURE);
       }
       consume();
 
       auto expr = parse_expr();
       if (!expr) {
-        std::cerr << "Expected expression inside exit()\n";
+        std::cerr << "Expected expression inside exit() at line "
+                  << peek().m_line << ", col " << peek().m_col << "\n";
+
         exit(EXIT_FAILURE);
       }
 
       if (peek().type != TokenType::_close_paren) {
-        std::cerr << "Expected ')'\n";
+        std::cerr << "Expected ')' at line " << peek().m_line << ", col "
+                  << peek().m_col << "\n";
+
         exit(EXIT_FAILURE);
       }
       consume();
@@ -101,26 +106,35 @@ public:
       Token mutabTok = consume();
 
       if (peek().type != TokenType::_ident) {
-        std::cerr << "Expected identifier after const\n";
+        std::cerr << "Expected identifier after " << peek().value.value_or("")
+                  << " at line " << peek().m_line << ", col " << peek().m_col
+                  << "\n";
+
         exit(EXIT_FAILURE);
       }
 
       Token ident = consume();
 
       if (peek().type != TokenType::_colon) {
-        std::cerr << "Expected ':' after identifier\n";
+        std::cerr << "Expected ':' after identifier at line " << peek().m_line
+                  << ", col " << peek().m_col << "\n";
+
         exit(EXIT_FAILURE);
       }
       consume();
 
       if (peek().type != TokenType::_int) {
-        std::cerr << "Expected type after ':'\n";
+        std::cerr << "Expected type after ':' at line " << peek().m_line
+                  << ", col " << peek().m_col << "\n";
+
         exit(EXIT_FAILURE);
       }
       Token typeTok = consume();
 
       if (peek().type != TokenType::_assign) {
-        std::cerr << "Expected '='\n";
+        std::cerr << "Expected '=' at line " << peek().m_line << ", col "
+                  << peek().m_col << "\n";
+
         exit(EXIT_FAILURE);
       }
 
@@ -128,7 +142,9 @@ public:
 
       auto expr = parse_expr();
       if (!expr) {
-        std::cerr << "Expected expression after '='\n";
+        std::cerr << "Expected expression after '=' at line " << peek().m_line
+                  << ", col " << peek().m_col << "\n";
+
         exit(EXIT_FAILURE);
       }
 
@@ -143,17 +159,31 @@ public:
     node::NodeProg prog;
 
     while (peek().type != TokenType::_eof) {
-      auto stmt = parse_stmt();
 
+      while (peek().type == TokenType::_newline) {
+        consume();
+      }
+
+      if (peek().type == TokenType::_eof)
+        break;
+
+      auto stmt = parse_stmt();
       if (stmt) {
         prog.stmts.push_back(stmt.value());
       } else {
-        std::cerr << "Invalid statement\n";
+        std::cerr << "Invalid statement at line " << peek().m_line << ", col "
+                  << peek().m_col << "\n";
+
         exit(EXIT_FAILURE);
       }
 
       if (peek().type == TokenType::_newline) {
         consume();
+      } else if (peek().type != TokenType::_eof) {
+        std::cerr << "Expected newline after statement at line "
+                  << peek().m_line << ", col " << peek().m_col << "\n";
+
+        exit(EXIT_FAILURE);
       }
     }
 
