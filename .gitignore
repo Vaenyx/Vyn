@@ -12,3 +12,6 @@ _deps
 CMakeUserPresets.json
 
 build/
+tests/
+a.out
+a.c

@@ -20,6 +20,7 @@ enum class TokenType {
   _ident,
   _assign,
   _const,
+  _mut,
   _colon
 };
 
@@ -56,6 +57,8 @@ public:
           tokens.push_back(Token{TokenType::_exit});
         } else if (buf == "const") {
           tokens.push_back(Token{TokenType::_const});
+        } else if (buf == "mut") {
+          tokens.push_back(Token{TokenType::_mut});
         } else if (buf == "int") {
           tokens.push_back(Token{TokenType::_int});
         } else {
