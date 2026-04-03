@@ -3,21 +3,26 @@
 #include "generation.hpp"
 #include "parser.hpp"
 #include "tokenization.hpp"
+
+#include <algorithm>
+#include <cstdlib>
+#include <iostream>
 #include <string>
 
 std::string vyn_to_c(const std::string &input) {
   Tokenizer tokenizer(input);
-
   std::vector<Token> tokens = tokenizer.tokenize();
 
   Parser parser(std::move(tokens));
-  std::vector<node::NodeStatement> tree = parser.parse();
+  auto tree_opt = parser.parse_prog();
 
-  if (tree.size() == 0) {
-    std::cerr << "No exit statement found\n";
-    exit(EXIT_FAILURE);
+  if (!tree_opt) {
+    std::cerr << "Parsing failed\n";
+    std::exit(EXIT_FAILURE);
   }
 
+  node::NodeProg tree = *tree_opt;
+
   Generator generator(tree);
-  return generator.generate();
-};
+  return generator.gen_prog();
+}

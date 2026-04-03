@@ -14,11 +14,14 @@ Args get_args(int argc, char *argv[]) {
   CLI::App app{"Vyn compiler"};
 
   Args args;
+
   args.out_file = "a.out";
   args.c_file = false;
 
   app.add_option("input_file", args.input_file, "Input file")->required();
-  app.add_option("-o,--out", args.out_file, "Output file");
+
+  auto out_opt = app.add_option("-o,--out", args.out_file, "Output file");
+
   app.add_flag("-c,--cfile", args.c_file,
                "Creates a c file instead of a binary");
 
@@ -26,6 +29,10 @@ Args get_args(int argc, char *argv[]) {
     app.parse(argc, argv);
   } catch (const CLI::ParseError &err) {
     std::exit(app.exit(err));
+  }
+
+  if (args.c_file && out_opt->count() == 0) {
+    args.out_file = "a.c";
   }
 
   return args;
