@@ -31,8 +31,10 @@ public:
                             res << gen_expr(v.expr);
                             res << ");\n";
                           },
-                          [&](const node::NodeStmtConst &v) {
-                            res << "const ";
+                          [&](const node::NodeStmtDecl &v) {
+                            if (v.mutab.mutab.type == TokenType::_const) {
+                              res << "const ";
+                            }
                             res << token_type_to_string(v.type.type.type);
                             res << " ";
                             res << v.ident.value.value();

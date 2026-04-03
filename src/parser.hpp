@@ -14,6 +14,10 @@ struct NodeType {
   Token type;
 };
 
+struct NodeMutability {
+  Token mutab;
+};
+
 struct NodeExprIntLit {
   Token int_lit;
 };
@@ -30,14 +34,15 @@ struct NodeStmtExit {
   NodeExpr expr;
 };
 
-struct NodeStmtConst {
+struct NodeStmtDecl {
+  NodeMutability mutab;
   Token ident;
   NodeType type;
   NodeExpr expr;
 };
 
 struct NodeStmt {
-  std::variant<NodeStmtExit, NodeStmtConst> var;
+  std::variant<NodeStmtExit, NodeStmtDecl> var;
 };
 
 struct NodeProg {
@@ -92,8 +97,8 @@ public:
     }
 
     // const x : int = expr
-    if (peek().type == TokenType::_const) {
-      consume(); // consume 'const'
+    if (peek().type == TokenType::_const || peek().type == TokenType::_mut) {
+      Token mutabTok = consume();
 
       if (peek().type != TokenType::_ident) {
         std::cerr << "Expected identifier after const\n";
@@ -127,8 +132,9 @@ public:
         exit(EXIT_FAILURE);
       }
 
-      return node::NodeStmt{
-          node::NodeStmtConst{ident, node::NodeType{typeTok}, expr.value()}};
+      return node::NodeStmt{node::NodeStmtDecl{node::NodeMutability{mutabTok},
+                                               ident, node::NodeType{typeTok},
+                                               expr.value()}};
     }
     return std::nullopt;
   }
