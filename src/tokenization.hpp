@@ -17,11 +17,15 @@ enum class TokenType {
   _eof,
   _open_paren,
   _close_paren,
+  _open_curly_paren,
+  _close_curly_paren,
   _ident,
   _assign,
   _const,
   _mut,
-  _colon
+  _colon,
+  _if,
+  _else,
 };
 
 struct Token {
@@ -103,6 +107,10 @@ private:
       return Token{TokenType::_const, std::nullopt, line, col};
     } else if (buf == "mut") {
       return Token{TokenType::_mut, std::nullopt, line, col};
+    } else if (buf == "if") {
+      return Token{TokenType::_if, std::nullopt, line, col};
+    } else if (buf == "else") {
+      return Token{TokenType::_else, std::nullopt, line, col};
     } else if (buf == "int") {
       return Token{TokenType::_int, std::nullopt, line, col};
     } else {
@@ -132,6 +140,16 @@ private:
     if (c == ')') {
       consume();
       return Token{TokenType::_close_paren, std::nullopt, line, col};
+    }
+
+    if (c == '{') {
+      consume();
+      return Token{TokenType::_open_curly_paren, std::nullopt, line, col};
+    }
+
+    if (c == '}') {
+      consume();
+      return Token{TokenType::_close_curly_paren, std::nullopt, line, col};
     }
 
     if (c == '\n') {
