@@ -41,8 +41,20 @@ struct NodeStmtDecl {
   NodeExpr expr;
 };
 
+struct NodeStmt;
+
+struct NodeStmtBlock {
+  std::vector<NodeStmt> stmts;
+};
+
+struct NodeStmtIf {
+  NodeExpr condition;
+  NodeStmtBlock thenBlock;
+  std::optional<NodeStmtBlock> elseBlock;
+};
+
 struct NodeStmt {
-  std::variant<NodeStmtExit, NodeStmtDecl> var;
+  std::variant<NodeStmtExit, NodeStmtDecl, NodeStmtIf, NodeStmtBlock> var;
 };
 
 struct NodeProg {
@@ -71,6 +83,36 @@ public:
 
   std::optional<node::NodeStmt> parse_stmt() {
 
+    if (peek().type == TokenType::_if) {
+      consume();
+
+      auto condition = parse_expr();
+      if (!condition) {
+        std::cerr << "Expected condition after if at line " << peek().m_line
+                  << ", col " << peek().m_col << "\n";
+
+        exit(EXIT_FAILURE);
+      }
+
+      auto thenBlock = parse_block();
+
+      while (peek().type == TokenType::_newline) {
+        consume();
+      }
+
+      std::optional<node::NodeStmtBlock> elseBlock;
+
+      if (peek().type == TokenType::_else) {
+        consume();
+
+        auto blk = parse_block();
+
+        elseBlock = blk;
+      }
+
+      return node::NodeStmt{
+          node::NodeStmtIf{condition.value(), thenBlock, elseBlock}};
+    }
     // exit(expr)
     if (peek().type == TokenType::_exit) {
       consume();
@@ -153,6 +195,57 @@ public:
                                                expr.value()}};
     }
     return std::nullopt;
+  }
+
+  node::NodeStmtBlock parse_block() {
+    while (peek().type == TokenType::_newline)
+      consume();
+
+    if (peek().type != TokenType::_open_curly_paren) {
+      std::cerr << "Expected '{' before block at line " << peek().m_line
+                << ", col " << peek().m_col << "\n";
+
+      exit(EXIT_FAILURE);
+    }
+
+    consume();
+
+    node::NodeStmtBlock block;
+
+    while (peek().type != TokenType::_close_curly_paren) {
+
+      while (peek().type == TokenType::_newline)
+        consume();
+
+      if (peek().type == TokenType::_close_curly_paren)
+        break;
+
+      auto stmt = parse_stmt();
+      if (!stmt) {
+        std::cerr << "Invalid statement at line " << peek().m_line << ", col "
+                  << peek().m_col << "\n";
+        exit(EXIT_FAILURE);
+      }
+
+      block.stmts.push_back(stmt.value());
+
+      if (peek().type == TokenType::_newline)
+        consume();
+    }
+
+    while (peek().type == TokenType::_newline)
+      consume();
+
+    if (peek().type != TokenType::_close_curly_paren) {
+      std::cerr << "Expected '}' after block at line " << peek().m_line
+                << ", col " << peek().m_col << "\n";
+
+      exit(EXIT_FAILURE);
+    }
+
+    consume();
+
+    return block;
   }
 
   std::optional<node::NodeProg> parse_prog() {
