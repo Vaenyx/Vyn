@@ -34,9 +34,17 @@ std::string format_c(const std::string &c_code) {
 
   std::string cmd = "clang-format " + tmp.string() + " -i";
 
-  std::system(cmd.c_str());
+  int result = std::system(cmd.c_str());
+
+  if (result != 0) {
+    std::cerr << "Formatting failed\n";
+    exit(EXIT_FAILURE);
+  }
 
   std::string formatted_c_code = get_file_content(tmp.string());
+
+  std::filesystem::remove(tmp);
+
   return formatted_c_code;
 }
 
