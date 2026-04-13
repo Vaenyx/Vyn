@@ -41,9 +41,9 @@ struct Token {
 
 class Tokenizer {
 public:
-  inline explicit Tokenizer(std::string src) : m_src(std::move(src)) {};
+  explicit Tokenizer(std::string src) : m_src(std::move(src)) {}
 
-  inline std::vector<Token> tokenize() {
+  std::vector<Token> tokenize() {
     std::vector<Token> tokens;
     std::string buf;
 
@@ -51,122 +51,90 @@ public:
       size_t start_line = m_line;
       size_t start_col = m_col;
 
+      // ======================
+      // COMMENTS
+      // ======================
+      if (*c == '/' && peek(1)) {
+        if (*peek(1) == '/') {
+          consume(); // '/'
+          consume(); // '/'
+
+          while (peek() && *peek() != '\n') {
+            consume();
+          }
+          continue;
+        }
+
+        if (*peek(1) == '*') {
+          consume(); // '/'
+          consume(); // '*'
+
+          while (peek()) {
+            if (*peek() == '*' && peek(1) && *peek(1) == '/') {
+              consume();
+              consume();
+              break;
+            }
+            consume(); // IMPORTANT
+          }
+          continue;
+        }
+      }
+
+      // ======================
+      // IDENTIFIERS / KEYWORDS
+      // ======================
       if (std::isalpha(static_cast<unsigned char>(*c))) {
         buf.clear();
         buf.push_back(consume());
 
-        auto n = peek();
-        while (n && std::isalnum(static_cast<unsigned char>(*n))) {
+        while (peek() && std::isalnum(static_cast<unsigned char>(*peek()))) {
           buf.push_back(consume());
-          n = peek();
         }
 
         tokens.push_back(buf_to_token(buf, start_line, start_col));
         continue;
       }
 
+      // ======================
+      // NUMBERS
+      // ======================
       if (std::isdigit(static_cast<unsigned char>(*c))) {
         buf.clear();
         buf.push_back(consume());
 
-        auto n = peek();
-        while (n && std::isdigit(static_cast<unsigned char>(*n))) {
+        while (peek() && std::isdigit(static_cast<unsigned char>(*peek()))) {
           buf.push_back(consume());
-          n = peek();
         }
-        tokens.push_back(
-            Token{TokenType::_int_lit, buf, start_line, start_col});
+
+        tokens.emplace_back(TokenType::_int_lit, buf, start_line, start_col);
         continue;
       }
 
-      std::optional<Token> char_tok = char_to_token(*c);
-      if (char_tok) {
-        tokens.push_back(*char_tok);
+      // ======================
+      // SINGLE CHAR TOKENS
+      // ======================
+      auto tok = char_to_token(*c, start_line, start_col);
+
+      consume(); // ALWAYS consume here
+
+      if (tok) {
+        tokens.push_back(*tok);
       }
     }
 
-    tokens.push_back(Token{TokenType::_eof, std::nullopt, m_line, m_col});
-    m_idx = 0;
+    tokens.emplace_back(TokenType::_eof, std::nullopt, m_line, m_col);
     return tokens;
   }
 
 private:
   std::optional<char> peek(size_t ahead = 0) const {
-    if (m_idx + ahead >= m_src.size()) {
+    if (m_idx + ahead >= m_src.size())
       return std::nullopt;
-    }
     return m_src[m_idx + ahead];
   }
 
-  Token buf_to_token(const std::string &buf, size_t line, size_t col) {
-    if (buf == "return") {
-      return Token{TokenType::_return, std::nullopt, line, col};
-    } else if (buf == "exit") {
-      return Token{TokenType::_exit, std::nullopt, line, col};
-    } else if (buf == "const") {
-      return Token{TokenType::_const, std::nullopt, line, col};
-    } else if (buf == "mut") {
-      return Token{TokenType::_mut, std::nullopt, line, col};
-    } else if (buf == "if") {
-      return Token{TokenType::_if, std::nullopt, line, col};
-    } else if (buf == "else") {
-      return Token{TokenType::_else, std::nullopt, line, col};
-    } else if (buf == "int") {
-      return Token{TokenType::_int, std::nullopt, line, col};
-    } else {
-      return Token{TokenType::_ident, buf, line, col};
-    }
-  }
-
-  std::optional<Token> char_to_token(char c) {
-    size_t line = m_line;
-    size_t col = m_col;
-
-    if (c == '=') {
-      consume();
-      return Token{TokenType::_assign, std::nullopt, line, col};
-    }
-
-    if (c == ':') {
-      consume();
-      return Token{TokenType::_colon, std::nullopt, line, col};
-    }
-
-    if (c == '(') {
-      consume();
-      return Token{TokenType::_open_paren, std::nullopt, line, col};
-    }
-
-    if (c == ')') {
-      consume();
-      return Token{TokenType::_close_paren, std::nullopt, line, col};
-    }
-
-    if (c == '{') {
-      consume();
-      return Token{TokenType::_open_curly_paren, std::nullopt, line, col};
-    }
-
-    if (c == '}') {
-      consume();
-      return Token{TokenType::_close_curly_paren, std::nullopt, line, col};
-    }
-
-    if (c == '\n') {
-      consume();
-      return Token{TokenType::_newline, std::nullopt, line, col};
-    }
-
-    if (std::isspace(static_cast<unsigned char>(c))) {
-      consume();
-      return std::nullopt;
-    }
-
-    std::cerr << "Unexpected character at line " << line << ", col " << col
-              << ": " << c << "\n";
-    exit(EXIT_FAILURE);
-  }
-  inline char consume() {
+  char consume() {
     char c = m_src[m_idx++];
 
     if (c == '\n') {
@@ -179,6 +147,53 @@ private:
     return c;
   }
 
+  Token buf_to_token(const std::string &buf, size_t line, size_t col) {
+    if (buf == "return")
+      return {TokenType::_return, std::nullopt, line, col};
+    if (buf == "exit")
+      return {TokenType::_exit, std::nullopt, line, col};
+    if (buf == "const")
+      return {TokenType::_const, std::nullopt, line, col};
+    if (buf == "mut")
+      return {TokenType::_mut, std::nullopt, line, col};
+    if (buf == "if")
+      return {TokenType::_if, std::nullopt, line, col};
+    if (buf == "else")
+      return {TokenType::_else, std::nullopt, line, col};
+    if (buf == "int")
+      return {TokenType::_int, std::nullopt, line, col};
+
+    return {TokenType::_ident, buf, line, col};
+  }
+
+  std::optional<Token> char_to_token(char c, size_t line, size_t col) {
+    switch (c) {
+    case '=':
+      return Token{TokenType::_assign, std::nullopt, line, col};
+    case ':':
+      return Token{TokenType::_colon, std::nullopt, line, col};
+    case '(':
+      return Token{TokenType::_open_paren, std::nullopt, line, col};
+    case ')':
+      return Token{TokenType::_close_paren, std::nullopt, line, col};
+    case '{':
+      return Token{TokenType::_open_curly_paren, std::nullopt, line, col};
+    case '}':
+      return Token{TokenType::_close_curly_paren, std::nullopt, line, col};
+    case '\n':
+      return Token{TokenType::_newline, std::nullopt, line, col};
+    }
+
+    if (std::isspace(static_cast<unsigned char>(c))) {
+      return std::nullopt;
+    }
+
+    std::cerr << "Unexpected character at line " << line << ", col " << col
+              << ": " << c << "\n";
+    std::exit(EXIT_FAILURE);
+  }
+
+private:
   const std::string m_src;
   size_t m_idx = 0;
   size_t m_line = 1;
