@@ -51,13 +51,10 @@ public:
       size_t start_line = m_line;
       size_t start_col = m_col;
 
-      // ======================
-      // COMMENTS
-      // ======================
       if (*c == '/' && peek(1)) {
         if (*peek(1) == '/') {
-          consume(); // '/'
-          consume(); // '/'
+          consume();
+          consume();
 
           while (peek() && *peek() != '\n') {
             consume();
@@ -66,8 +63,8 @@ public:
         }
 
         if (*peek(1) == '*') {
-          consume(); // '/'
-          consume(); // '*'
+          consume();
+          consume();
 
           while (peek()) {
             if (*peek() == '*' && peek(1) && *peek(1) == '/') {
@@ -75,15 +72,12 @@ public:
               consume();
               break;
             }
-            consume(); // IMPORTANT
+            consume();
           }
           continue;
         }
       }
 
-      // ======================
-      // IDENTIFIERS / KEYWORDS
-      // ======================
       if (std::isalpha(static_cast<unsigned char>(*c))) {
         buf.clear();
         buf.push_back(consume());
@@ -96,9 +90,6 @@ public:
         continue;
       }
 
-      // ======================
-      // NUMBERS
-      // ======================
       if (std::isdigit(static_cast<unsigned char>(*c))) {
         buf.clear();
         buf.push_back(consume());
@@ -111,12 +102,9 @@ public:
         continue;
       }
 
-      // ======================
-      // SINGLE CHAR TOKENS
-      // ======================
       auto tok = char_to_token(*c, start_line, start_col);
 
-      consume(); // ALWAYS consume here
+      consume();
 
       if (tok) {
         tokens.push_back(*tok);
