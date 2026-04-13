@@ -3,6 +3,7 @@
 #include <CLI/CLI.hpp>
 #include <cstdlib>
 #include <iostream>
+#include <string>
 
 struct Args {
   std::string input_file;
@@ -50,7 +51,8 @@ int main(int argc, char *argv[]) {
   std::string c_code = vyn_to_c(contents);
 
   if (args.c_file) {
-    write_to_file(args.out_file, c_code);
+    std::string formatted_c_code = format_c(c_code);
+    write_to_file(args.out_file, formatted_c_code);
   } else {
     compile_c(c_code, args.out_file);
   }
