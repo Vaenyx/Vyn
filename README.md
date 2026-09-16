@@ -1,4 +1,4 @@
-# Vyn — Core Language Specification (Draft v0.1)
+ # Vyn (wip)- Core Language Specification (Draft v0.1)
 
 ## 1. General
 
