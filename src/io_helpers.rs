@@ -45,7 +45,10 @@ pub fn create_output_file(path: &PathBuf) -> Result<(), VynCompilationError> {
     Ok(())
 }
 
-pub fn write_output_file(path: &PathBuf, input: &[u8]) -> Result<(), VynCompilationError> {
+pub fn write_output_file(
+    path: &PathBuf,
+    input: impl AsRef<[u8]>,
+) -> Result<(), VynCompilationError> {
     fs::write(path, input).map_err(|source| {
         OutputFileError::Write(OutputFileWriteError {
             path: path.clone(),

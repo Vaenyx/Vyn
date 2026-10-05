@@ -3,7 +3,7 @@ use std::path::PathBuf;
 
 use crate::{
     io_helpers::{create_output_file, read_input_file, write_output_file},
-    lib::llvm_to_binary,
+    lib::{llvm_to_binary, vyn_to_llvm},
     main_error::VynCompilationError,
 };
 
@@ -21,10 +21,16 @@ fn main() -> Result<(), VynCompilationError> {
 
     let input_file_content = read_input_file(&args.input)?;
 
-    let binary = llvm_to_binary(input_file_content)?;
+    let llvm_content = vyn_to_llvm(input_file_content);
+
+    let final_content = if args.llvm {
+        llvm_content.into_bytes()
+    } else {
+        llvm_to_binary(llvm_content)?
+    };
 
     create_output_file(&output)?;
-    write_output_file(&output, &binary)?;
+    write_output_file(&output, &final_content)?;
 
     Ok(())
 }
