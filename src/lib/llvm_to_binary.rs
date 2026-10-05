@@ -1,9 +1,4 @@
-use std::{
-    fs::{self, File},
-    io::{Read, Write},
-    path::PathBuf,
-    process::{Command, ExitStatus},
-};
+use std::{fs, path::PathBuf, process::Command};
 
 use crate::lib::llvm_to_binary_error;
 
@@ -21,15 +16,6 @@ fn create_temp_file(extension: &str) -> Result<PathBuf, llvm_to_binary_error::Te
     })?;
 
     Ok(temp_file_path)
-}
-
-fn open_temp_file(path: &PathBuf) -> Result<File, llvm_to_binary_error::TempFileError> {
-    let file = fs::File::open(path).map_err(|source| llvm_to_binary_error::TempFileOpenError {
-        path: path.clone(),
-        source,
-    })?;
-
-    Ok(file)
 }
 
 fn read_temp_file(path: &PathBuf) -> Result<Vec<u8>, llvm_to_binary_error::TempFileError> {

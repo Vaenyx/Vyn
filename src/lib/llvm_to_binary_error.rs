@@ -1,4 +1,4 @@
-use std::{io, path::PathBuf, process::ExitCode};
+use std::{io, path::PathBuf};
 
 #[derive(Debug, thiserror::Error)]
 pub enum LlvmToBinaryError {
