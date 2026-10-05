@@ -22,6 +22,9 @@ pub enum TempFileError {
 
     #[error(transparent)]
     Write(#[from] TempFileWriteError),
+
+    #[error(transparent)]
+    Delete(#[from] TempFileDeleteError),
 }
 
 #[derive(Debug, thiserror::Error)]
@@ -54,6 +57,15 @@ pub struct TempFileReadError {
 #[derive(Debug, thiserror::Error)]
 #[error("Problem writing to the temp file '{path:?}': {source}")]
 pub struct TempFileWriteError {
+    pub path: PathBuf,
+
+    #[source]
+    pub source: io::Error,
+}
+
+#[derive(Debug, thiserror::Error)]
+#[error("Problem deleting the temp file '{path:?}': {source}")]
+pub struct TempFileDeleteError {
     pub path: PathBuf,
 
     #[source]

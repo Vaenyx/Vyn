@@ -38,6 +38,11 @@ fn write_temp_file(path: &PathBuf, input: &str) -> Result<(), llvm_to_binary_err
     })
 }
 
+fn delete_temp_file(path: PathBuf) -> Result<(), llvm_to_binary_error::TempFileError> {
+    fs::remove_file(&path)
+        .map_err(|source| llvm_to_binary_error::TempFileDeleteError { path, source }.into())
+}
+
 fn execute_clang_command(
     ll_path: &PathBuf,
     bin_path: &PathBuf,
@@ -68,7 +73,10 @@ pub fn llvm_to_binary(input: String) -> Result<Vec<u8>, llvm_to_binary_error::Ll
 
     execute_clang_command(&tmp_ll_path, &tmp_bin_path)?;
 
+    delete_temp_file(tmp_ll_path)?;
+
     let compiled_content = read_temp_file(&tmp_bin_path)?;
 
+    delete_temp_file(tmp_bin_path)?;
     Ok(compiled_content)
 }
