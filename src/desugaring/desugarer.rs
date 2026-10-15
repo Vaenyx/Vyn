@@ -1,4 +1,4 @@
-use crate::lib::parser::Node;
+use crate::parsing::Node;
 
 pub struct DemoDesugaredNode {}
 

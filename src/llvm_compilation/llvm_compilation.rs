@@ -1,15 +1,15 @@
 use std::{fs, path::PathBuf, process::Command};
 
-use crate::lib::llvm_to_binary_error;
+use crate::llvm_compilation::llvm_compilation_error;
 
-fn create_temp_file(extension: &str) -> Result<PathBuf, llvm_to_binary_error::TempFileError> {
+fn create_temp_file(extension: &str) -> Result<PathBuf, llvm_compilation_error::TempFileError> {
     let temp_dir = env::temp_dir();
     let temp_file_name = format!("{}.{extension}", uuid::Uuid::new_v4());
 
     let temp_file_path = temp_dir.join(temp_file_name);
 
     fs::File::create_new(&temp_file_path).map_err(|source| {
-        llvm_to_binary_error::TempFileCreateError {
+        llvm_compilation_error::TempFileCreateError {
             path: temp_file_path.clone(),
             source,
         }
@@ -18,9 +18,9 @@ fn create_temp_file(extension: &str) -> Result<PathBuf, llvm_to_binary_error::Te
     Ok(temp_file_path)
 }
 
-fn read_temp_file(path: &PathBuf) -> Result<Vec<u8>, llvm_to_binary_error::TempFileError> {
+fn read_temp_file(path: &PathBuf) -> Result<Vec<u8>, llvm_compilation_error::TempFileError> {
     fs::read(path).map_err(|source| {
-        llvm_to_binary_error::TempFileReadError {
+        llvm_compilation_error::TempFileReadError {
             path: path.clone(),
             source,
         }
@@ -28,9 +28,12 @@ fn read_temp_file(path: &PathBuf) -> Result<Vec<u8>, llvm_to_binary_error::TempF
     })
 }
 
-fn write_temp_file(path: &PathBuf, input: &str) -> Result<(), llvm_to_binary_error::TempFileError> {
+fn write_temp_file(
+    path: &PathBuf,
+    input: &str,
+) -> Result<(), llvm_compilation_error::TempFileError> {
     fs::write(path, input).map_err(|source| {
-        llvm_to_binary_error::TempFileWriteError {
+        llvm_compilation_error::TempFileWriteError {
             path: path.clone(),
             source,
         }
@@ -38,24 +41,24 @@ fn write_temp_file(path: &PathBuf, input: &str) -> Result<(), llvm_to_binary_err
     })
 }
 
-fn delete_temp_file(path: PathBuf) -> Result<(), llvm_to_binary_error::TempFileError> {
+fn delete_temp_file(path: PathBuf) -> Result<(), llvm_compilation_error::TempFileError> {
     fs::remove_file(&path)
-        .map_err(|source| llvm_to_binary_error::TempFileDeleteError { path, source }.into())
+        .map_err(|source| llvm_compilation_error::TempFileDeleteError { path, source }.into())
 }
 
 fn execute_clang_command(
     ll_path: &PathBuf,
     bin_path: &PathBuf,
-) -> Result<(), llvm_to_binary_error::ClangCompilationExecutionError> {
+) -> Result<(), llvm_compilation_error::ClangCompilationExecutionError> {
     let output = Command::new("clang")
         .arg(ll_path)
         .arg("-o")
         .arg(bin_path)
         .output()
-        .map_err(|source| llvm_to_binary_error::ClangExecutionIoError { source })?;
+        .map_err(|source| llvm_compilation_error::ClangExecutionIoError { source })?;
 
     if !output.status.success() {
-        return Err(llvm_to_binary_error::ClangCompilationFailedError {
+        return Err(llvm_compilation_error::ClangCompilationFailedError {
             status: output.status.code(),
             stderr: String::from_utf8_lossy(&output.stderr).into_owned(),
         }
@@ -65,7 +68,7 @@ fn execute_clang_command(
     Ok(())
 }
 
-pub fn llvm_to_binary(input: String) -> Result<Vec<u8>, llvm_to_binary_error::LlvmToBinaryError> {
+pub fn llvm_to_binary(input: String) -> Result<Vec<u8>, llvm_compilation_error::LlvmToBinaryError> {
     let tmp_ll_path = create_temp_file("ll")?;
     let tmp_bin_path = create_temp_file("bin")?;
 

@@ -1,4 +1,4 @@
-use crate::lib::tokenizer::Token;
+use crate::tokenizing::Token;
 
 pub struct DemoNode {}
 

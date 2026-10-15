@@ -1,3 +1,3 @@
-use crate::lib::desugarer::DesugaredNode;
+use crate::desugaring::DesugaredNode;
 
 pub fn validate(_desugared_nodes: &[DesugaredNode]) -> () {}
