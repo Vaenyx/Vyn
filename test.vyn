@@ -1,0 +1,216 @@
+
+/*
+ * Vyn Programming Language
+ * Demonstration Program
+ *
+ * Locality:
+ *   local  - Local scope (default, can be explicitly specified)
+ *   global - Global scope
+ *
+ * Access:
+ *   readOnly  - Reading permitted, writing prohibited
+ *   writeOnly - Writing permitted, reading prohibited
+ *   readWrite - Reading and writing permitted (default)
+ *
+ * Both 'local' and 'readWrite' are optional because they
+ * are the defaults, but may be explicitly specified.
+ *
+ * Mutability:
+ *   const - Constant value
+ *   mut   - Mutable value
+ */
+
+// Global constants
+global readOnly const MAX_COUNT: int = 10
+global readOnly const PI: float = 3.14159
+global readOnly const DEBUG: bool = true
+
+// Basic arithmetic
+fn add(a: int, b: int) -> int {
+    return a + b
+}
+
+fn multiply(a: int, b: int) -> int {
+    return a * b
+}
+
+fn square(n: int) -> int {
+    return n * n
+}
+
+// Boolean expressions and comparisons
+fn is_even(n: int) -> bool {
+    return n / 2 * 2 == n
+}
+
+fn is_positive(n: int) -> bool {
+    return n > 0
+}
+
+// Conditional branching
+fn classify(n: int) -> str {
+    if n > 0 {
+        return "positive"
+    } elif n < 0 {
+        return "negative"
+    } else {
+        return "zero"
+    }
+}
+
+// While loops and mutable variables
+fn factorial(n: int) -> int {
+    local readWrite mut result: int = 1
+    mut i: int = 1
+
+    while i <= n {
+        result = result * i
+        i = i + 1
+    }
+
+    return result
+}
+
+// Recursive functions
+fn fibonacci(n: int) -> int {
+    if n <= 1 {
+        return n
+    }
+
+    return fibonacci(n - 1) + fibonacci(n - 2)
+}
+
+// Logical AND
+fn is_valid(n: int) -> bool {
+    return n >= 0 && n <= MAX_COUNT
+}
+
+// Logical OR
+fn either_positive(a: int, b: int) -> bool {
+    return a > 0 || b > 0
+}
+
+// Logical NOT
+fn is_disabled(enabled: bool) -> bool {
+    return !enabled
+}
+
+// Bitwise operations
+fn bitwise_and(a: int, b: int) -> int {
+    return a & b
+}
+
+fn bitwise_or(a: int, b: int) -> int {
+    return a | b
+}
+
+fn bitwise_xor(a: int, b: int) -> int {
+    return a ^ b
+}
+
+// Arrays and iteration
+fn sum_numbers(numbers: [int]) -> int {
+    local readWrite mut total: int = 0
+
+    for number in numbers {
+        total = total + number
+    }
+
+    return total
+}
+
+// Access control demonstration
+fn access_demo() -> int {
+    // Explicit readOnly access
+    local readOnly const limit: int = 100
+
+    // Explicit readWrite access
+    local readWrite mut counter: int = 0
+
+    // Implicit local and readWrite
+    mut result: int = 0
+
+    // Explicit writeOnly access
+    local writeOnly mut output: int = 0
+
+    counter = counter + 1
+    result = limit + counter
+
+    // Writing is permitted
+    output = result
+
+    // Invalid operations:
+    // limit = 200   // Error: readOnly
+    // result = output // Error: writeOnly
+
+    return result
+}
+
+// Entry point
+fn main() -> int {
+    // Explicit local and readOnly
+    local readOnly const x: int = 10
+    local readOnly const y: int = 20
+
+    // Explicit local and readWrite
+    local readWrite mut result: int = add(x, y)
+    result = multiply(result, 2)
+
+    // Implicit local and readWrite
+    const ratio: float = 2.5
+    const message: str = "Hello from Vyn!"
+    const enabled: bool = true
+
+    // Comparisons
+    if result >= 50 {
+        result = result + 10
+    } elif result == 40 {
+        result = result - 10
+    } else {
+        result = 0
+    }
+
+    // Logical AND
+    if enabled && result > 0 {
+        result = result * 2
+    }
+
+    // Logical OR
+    if result == 0 || result > 100 {
+        result = result + 1
+    }
+
+    // Logical NOT
+    if !enabled {
+        result = 0
+    }
+
+    // Bitwise operators
+    readOnly const flags_a: int = 12
+    readOnly const flags_b: int = 10
+
+    const masked: int = flags_a & flags_b
+    const combined: int = flags_a | flags_b
+    const toggled: int = flags_a ^ flags_b
+
+    // While loop
+    readWrite mut counter: int = 0
+
+    while counter < 5 {
+        counter = counter + 1
+    }
+
+    // Array literal
+    readOnly const numbers: [int] = [1, 2, 3, 4, 5]
+
+    // Function calls
+    const total: int = sum_numbers(numbers)
+    const fact: int = factorial(5)
+    const fib: int = fibonacci(10)
+
+    // Access control demonstration
+    const access_result: int = access_demo()
+
+    return result
+}
+
