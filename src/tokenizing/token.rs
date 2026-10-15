@@ -53,6 +53,7 @@ pub enum Keyword {
 
     Locality(Locality),
     Mutability(Mutability),
+    Access(Access),
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -73,10 +74,20 @@ pub enum Locality {
     Global(KeywordGlobalToken),
 }
 
+// TODO Add ownership and complex Mutability
+
 #[derive(Debug, Clone, PartialEq)]
 pub enum Mutability {
+    Imut(KeywordImutToken),
     Mut(KeywordMutToken),
     Const(KeywordConstToken),
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum Access {
+    ReadOnly(KeywordReadOnlyToken),
+    WriteOnly(KeywordWriteOnlyToken),
+    ReadWrite(KeywordReadWriteToken),
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -194,9 +205,18 @@ pub struct KeywordLocalToken {}
 pub struct KeywordGlobalToken {}
 
 #[derive(Debug, Clone, PartialEq, Eq)]
+pub struct KeywordImutToken {}
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct KeywordMutToken {}
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct KeywordConstToken {}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct KeywordReadOnlyToken {}
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct KeywordWriteOnlyToken {}
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct KeywordReadWriteToken {}
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct TypeIntToken {}

@@ -3,13 +3,14 @@ use std::{iter::Peekable, str::CharIndices};
 use crate::tokenizing::{
     Token,
     token::{
-        ArrowToken, AssignToken, BitwiseAndToken, BitwiseOrToken, BlockCommentToken,
+        Access, ArrowToken, AssignToken, BitwiseAndToken, BitwiseOrToken, BlockCommentToken,
         BoolLiteralToken, ColonToken, CombinationOperator, CommaToken, Comment, ComparisonOperator,
         ControlFlow, Delimiter, DotToken, EqEqToken, FloatLiteralToken, GreaterEqToken,
         GreaterToken, IdentToken, IntLiteralToken, Keyword, KeywordConstToken, KeywordElifToken,
         KeywordElseToken, KeywordFnToken, KeywordForToken, KeywordGlobalToken, KeywordIfToken,
-        KeywordInToken, KeywordLocalToken, KeywordMutToken, KeywordReturnToken, KeywordWhereToken,
-        KeywordWhileToken, LBraceToken, LBracketToken, LParenToken, LessEqToken, LessToken,
+        KeywordImutToken, KeywordInToken, KeywordLocalToken, KeywordMutToken, KeywordReadOnlyToken,
+        KeywordReadWriteToken, KeywordReturnToken, KeywordWhereToken, KeywordWhileToken,
+        KeywordWriteOnlyToken, LBraceToken, LBracketToken, LParenToken, LessEqToken, LessToken,
         LineCommentToken, Literal, Locality, LogicalAndToken, LogicalOrToken, MinusToken,
         ModificationOperator, Mutability, NotEqToken, NotToken, Operator, PlusToken, PureToken,
         RBraceToken, RBracketToken, RParenToken, SlashToken, Span, StarToken, StringLiteralToken,
@@ -177,8 +178,21 @@ fn next_token(it: &mut Lexer<'_>, source_len: usize) -> Option<Token> {
                 "const" => {
                     PureToken::Keyword(Keyword::Mutability(Mutability::Const(KeywordConstToken {})))
                 }
+                "imut" => {
+                    PureToken::Keyword(Keyword::Mutability(Mutability::Imut(KeywordImutToken {})))
+                }
                 "mut" => {
                     PureToken::Keyword(Keyword::Mutability(Mutability::Mut(KeywordMutToken {})))
+                }
+
+                "readOnly" => {
+                    PureToken::Keyword(Keyword::Access(Access::ReadOnly(KeywordReadOnlyToken {})))
+                }
+                "writeOnly" => {
+                    PureToken::Keyword(Keyword::Access(Access::WriteOnly(KeywordWriteOnlyToken {})))
+                }
+                "readWrite" => {
+                    PureToken::Keyword(Keyword::Access(Access::ReadWrite(KeywordReadWriteToken {})))
                 }
 
                 "int" => PureToken::Type(Type::Int(TypeIntToken {})),
