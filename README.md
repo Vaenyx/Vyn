@@ -1,6 +1,5 @@
 # Vyn (WIP) — Core Language Specification
 
-
 ## Table of Contents
 
 - [1. General](#1-general)
@@ -96,7 +95,7 @@ of comments
 
 - `local` and `readWrite` are the defaults and may be written explicitly.
 - The declared type is mandatory, even when the initializer makes it obvious.
-- Use `mut` for a reassignable binding or `const` for one that cannot be reassigned.
+- Use `mut` for a reassignable runtime variable, `imut` for an immutable runtime variable, or `const` for a compile-time constant.
 
 ```rust
 mut x: int = 5
@@ -123,15 +122,20 @@ local mut y: int = 10
 
 | Modifier | Meaning |
 | --- | --- |
-| `mut` | Reassignment is permitted when access allows writing |
-| `const` | Reassignment is prohibited after initialization |
+| `mut` | Mutable runtime variable; reassignment is permitted |
+| `imut` | Immutable runtime variable; reassignment is prohibited after initialization |
+| `const` | Compile-time constant; its value must be evaluable at compile time |
 
 ```rust
 mut x: int = 5
 x = 10                       // allowed
 
-const y: int = 5
-// y = 10                    // error: const
+imut y: int = getValue()     // evaluated at runtime
+// y = 10                    // error: immutable variable
+
+const z: int = 5             // evaluated at compile time
+// z = getValue()            // error: not a compile-time constant
+// z = 10                    // error: constant
 ```
 
 ### 3.4 Access
@@ -159,22 +163,25 @@ total = total + 1            // allowed
 
 ### 3.5 Mutability and Access Together
 
-Mutability determines whether a binding can be reassigned. Access determines whether an operation through that binding is permitted. Both must permit a write.
+Mutability determines whether a runtime binding can be reassigned or a value must be evaluated at compile time. Access determines whether an operation through that binding is permitted. Both must permit a write.
 
 | Declaration | Read | Reassign |
 | --- | --- | --- |
 | `readOnly const` | Yes | No |
 | `writeOnly const` | No | No |
 | `readWrite const` | Yes | No |
+| `readOnly imut` | Yes | No |
+| `writeOnly imut` | No | No |
+| `readWrite imut` | Yes | No |
 | `readOnly mut` | Yes | No |
 | `writeOnly mut` | No | Yes |
 | `readWrite mut` | Yes | Yes |
 
-`writeOnly const` is legal but has no useful reads or post-initialization writes.
+`writeOnly const` and `writeOnly imut` are legal but have no useful reads or post-initialization writes.
 
 ### 3.6 Type Annotations
 
-All variable declarations must specify a type, even when the type could be inferred from the assigned value.
+All variable declarations must specify a type.
 
 ```rust
 mut count: int = 5
@@ -258,7 +265,7 @@ fn add(a: int, b: int) => int {
 
 ### 5.2 Parameters
 
-Parameter types are mandatory. Parameters are not reassignable unless marked `mut`. Access is `readWrite` by default but may be specified explicitly.
+Parameter types are mandatory. Parameters are not reassignable unless marked `mut` (immutable runtime parameters may be marked `imut` explicitly). Access is `readWrite` by default but may be specified explicitly.
 
 ```rust
 fn increment(mut value: int) => int {
@@ -316,7 +323,7 @@ result = increment(result)
 | Operator | Meaning |
 | --- | --- |
 | `&&` | AND |
-| \| | OR |
+| `\|` | OR |
 | `!` | NOT |
 
 ```rust
@@ -330,7 +337,7 @@ if enabled && count > 0 {
 | Operator | Meaning |
 | --- | --- |
 | `&` | AND |
-| \| | OR |
+| `\|` | OR |
 | `^` | XOR |
 
 ---
@@ -409,7 +416,7 @@ fn main() => int {
         print(x)
     }
 
-    const value: Optional<int> = findGreaterThanFive(numbers)
+    imut value: Optional<int> = findGreaterThanFive(numbers)
     const fallback: Optional<int> = Some(MAX_COUNT)
 
     last_result = result
