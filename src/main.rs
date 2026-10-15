@@ -1,15 +1,17 @@
 use clap::Parser;
 use std::path::PathBuf;
+use vyn::{
+    desugaring::desugar, generating::generate, llvm_compilation::llvm_to_binary, parsing::parse,
+    tokenizing::tokenize, validating::validate,
+};
 
 use crate::{
     io_helpers::{create_output_file, read_input_file, write_output_file},
-    lib::{desugar, generate, llvm_to_binary, parse, tokenize, validate},
     main_error::VynCompilationError,
 };
 
 mod args;
 mod io_helpers;
-mod lib;
 mod main_error;
 
 fn main() -> Result<(), VynCompilationError> {

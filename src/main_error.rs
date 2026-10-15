@@ -1,6 +1,6 @@
 use std::{io, path::PathBuf};
 
-use crate::lib::LlvmToBinaryError;
+use vyn::llvm_compilation::LlvmToBinaryError;
 
 #[derive(Debug, thiserror::Error)]
 pub enum VynCompilationError {

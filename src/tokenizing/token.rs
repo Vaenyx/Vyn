@@ -6,15 +6,28 @@ pub struct Token {
 
 #[derive(Clone, Debug)]
 pub struct Span {
-    pub start: u64, // byte offset
-    pub end: u64,   // byte offset (exclusive)
+    pub start: usize, // byte offset
+    pub end: usize,   // byte offset (exclusive)
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum PureToken {
+    Ident(IdentToken),
+    Literal(Literal),
+    Keyword(Keyword),
+    Type(Type),
+    Comment(Comment),
+    Operator(Operator),
+    Delimiter(Delimiter),
+    NewLine(NewLineToken),
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Literal {
-    IntLiteral(IntLiteralToken),
-    FloatLiteral(FloatLiteralToken),
-    BoolLiteral(BoolLiteralToken),
+    Int(IntLiteralToken),
+    Float(FloatLiteralToken),
+    Bool(BoolLiteralToken),
+    String(StringLiteralToken),
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -22,6 +35,7 @@ pub enum Type {
     Int(TypeIntToken),
     Float(TypeFloatToken),
     Bool(TypeBoolToken),
+    Str(TypeStrToken),
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -35,6 +49,14 @@ pub enum Keyword {
     Fn(KeywordFnToken),
     Return(KeywordReturnToken),
 
+    ControlFlow(ControlFlow),
+
+    Locality(Locality),
+    Mutability(Mutability),
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum ControlFlow {
     If(KeywordIfToken),
     Elif(KeywordElifToken),
     Else(KeywordElseToken),
@@ -43,22 +65,61 @@ pub enum Keyword {
     For(KeywordForToken),
     In(KeywordInToken),
     Where(KeywordWhereToken),
+}
 
+#[derive(Debug, Clone, PartialEq)]
+pub enum Locality {
     Local(KeywordLocalToken),
     Global(KeywordGlobalToken),
+}
 
+#[derive(Debug, Clone, PartialEq)]
+pub enum Mutability {
     Mut(KeywordMutToken),
     Const(KeywordConstToken),
 }
 
 #[derive(Debug, Clone, PartialEq)]
-pub enum PureToken {
-    Ident(IdentToken),
-    Literal(Literal),
-    Keyword(Keyword),
-    Type(Type),
-    Comment(Comment),
+pub enum CombinationOperator {
+    LogicalAnd(LogicalAndToken),
+    LogicalOr(LogicalOrToken),
 
+    BitwiseAnd(BitwiseAndToken),
+    BitwiseOr(BitwiseOrToken),
+
+    Not(NotToken),
+    Xor(XorToken),
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum ComparisonOperator {
+    EqEq(EqEqToken),
+    NotEq(NotEqToken),
+    Greater(GreaterToken),
+    GreaterEq(GreaterEqToken),
+    Less(LessToken),
+    LessEq(LessEqToken),
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum ModificationOperator {
+    Plus(PlusToken),
+    Minus(MinusToken),
+    Star(StarToken),
+    Slash(SlashToken),
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum Operator {
+    Assign(AssignToken),
+
+    Modification(ModificationOperator),
+    Comparison(ComparisonOperator),
+    Combination(CombinationOperator),
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum Delimiter {
     LParen(LParenToken),
     RParen(RParenToken),
     LBrace(LBraceToken),
@@ -69,26 +130,6 @@ pub enum PureToken {
     Colon(ColonToken),
     Arrow(ArrowToken),
     Dot(DotToken),
-
-    Assign(AssignToken),
-
-    Plus(PlusToken),
-    Minus(MinusToken),
-    Star(StarToken),
-    Slash(SlashToken),
-
-    EqEq(EqEqToken),
-    NotEq(NotEqToken),
-    Greater(GreaterToken),
-    GreaterEq(GreaterEqToken),
-    Less(LessToken),
-    LessEq(LessEqToken),
-
-    And(AndToken),
-    Or(OrToken),
-    Xor(XorToken),
-
-    NewLine(NewLineToken),
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -98,17 +139,22 @@ pub struct IdentToken {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct IntLiteralToken {
-    pub value: i64,
+    pub value: String,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct FloatLiteralToken {
-    pub value: f64,
+    pub value: String,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct BoolLiteralToken {
     pub value: bool,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct StringLiteralToken {
+    pub value: String,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -208,9 +254,16 @@ pub struct LessToken {} // <
 pub struct LessEqToken {} // <=
 
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct AndToken {} // &
+pub struct LogicalAndToken {} // &&
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct OrToken {} // |
+pub struct LogicalOrToken {} // ||
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct BitwiseAndToken {} // &
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct BitwiseOrToken {} // |
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct NotToken {} // !
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct XorToken {} // ||
 
