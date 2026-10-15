@@ -3,7 +3,7 @@ use std::path::PathBuf;
 
 use crate::{
     io_helpers::{create_output_file, read_input_file, write_output_file},
-    lib::{llvm_to_binary, vyn_to_llvm},
+    lib::{desugar, generate, llvm_to_binary, parse, tokenize, validate},
     main_error::VynCompilationError,
 };
 
@@ -19,9 +19,17 @@ fn main() -> Result<(), VynCompilationError> {
         true => "out.ll",
     }));
 
-    let input_file_content = read_input_file(&args.input)?;
+    let llvm_content = {
+        let input_file_content = read_input_file(&args.input)?;
 
-    let llvm_content = vyn_to_llvm(input_file_content);
+        let tokens = tokenize(&input_file_content);
+        let nodes = parse(&tokens);
+        let desugared_nodes = desugar(&nodes);
+
+        validate(&desugared_nodes);
+
+        generate(&desugared_nodes)
+    };
 
     let final_content = if args.llvm {
         llvm_content.into_bytes()
