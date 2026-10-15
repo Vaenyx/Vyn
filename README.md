@@ -34,7 +34,7 @@
   - [7.1 Primitive Types](#71-primitive-types)
   - [7.2 Optional](#72-optional)
   - [7.3 Collections](#73-collections)
-  - [7.4 Arrays and Iteration](#74-arrays-and-iteration)
+  - [7.4 Iteration](#74-iteration)
 - [8. Example](#8-example)
 
 ## 1. General
@@ -367,7 +367,7 @@ mut numbers: Vector<int> = [1, 2, 3, 4, 5]
 mut names: Map<str, int> = Map<str, int>()
 ```
 
-### 7.4 Arrays and Iteration
+### 7.4 Iteration
 
 Bracketed literals provide collection values, and `for ... in` iterates over collection elements.
 
