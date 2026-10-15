@@ -316,7 +316,7 @@ result = increment(result)
 | Operator | Meaning |
 | --- | --- |
 | `&&` | AND |
-| `||` | OR |
+| \| | OR |
 | `!` | NOT |
 
 ```rust
@@ -330,7 +330,7 @@ if enabled && count > 0 {
 | Operator | Meaning |
 | --- | --- |
 | `&` | AND |
-| `|` | OR |
+| \| | OR |
 | `^` | XOR |
 
 ---
