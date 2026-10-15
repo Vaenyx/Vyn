@@ -1,5 +1,5 @@
 use crate::lib::desugarer::DesugaredNode;
 
-pub fn generate(desugared_tokens: &[DesugaredNode]) -> String {
+pub fn generate(_desugared_tokens: &[DesugaredNode]) -> String {
     String::new()
 }
